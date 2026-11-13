@@ -52,6 +52,89 @@ Skill을 사용하려면 로컬에도 Codex가 설치되어 있어야 합니다.
 프로젝트에서는 CLI 활성화 경로를 이 체크아웃으로 지정하고, Skill도 해당 프로젝트에
 설치해야 합니다.
 
+## 로컬 Codex에서 Cloud로 작업 위임
+
+로컬의 **Codex CLI (`codex`)**가 작업을 제출하고, 실제 OpenAI API 작업은 게시된
+Cloud 환경의 **OpenAI CLI (`openai`)**로 실행할 수 있습니다. 이 방식에서는 로컬에
+이 프로젝트의 OpenAI CLI를 설치하거나 Cloud의 API 키를 복사할 필요가 없습니다.
+로컬 Codex는 ChatGPT 계정으로 로그인하고, API 작업에는 Cloud에 연결된 개인
+`OPENAI_API_KEY`를 사용합니다.
+
+`codex cloud`는 실험적 기능입니다. 로컬 버전에서 `codex cloud --help`와
+`codex cloud exec --help`로 지원 여부와 옵션을 확인합니다.
+
+### 로그인과 환경 선택
+
+로컬에 Codex CLI를 설치한 뒤 이 저장소의 로컬 체크아웃 디렉터리에서 실행합니다.
+이미 같은 ChatGPT 계정으로 로그인했다면 로그인 단계는 생략할 수 있습니다.
+
+```bash
+codex login
+codex cloud
+```
+
+`codex cloud` 화면에서 `o`를 눌러 환경 목록을 열고 `openai-api-toolkit` 환경의
+ID를 확인합니다. 아래 `<ENV_ID>`에는 이 목록의 환경 ID를 넣습니다. 컨테이너의
+hostname이나 실행 인스턴스 ID를 넣지 않습니다. 환경이 보이지 않으면 로그인한
+계정·워크스페이스와 해당 환경의 게시·접근 상태를 확인합니다.
+
+작업할 저장소가 선택한 Cloud 환경에 포함되어 있어야 합니다. 다른 프로젝트의 코드를
+수정하려면 해당 프로젝트 저장소도 그 환경에 연결해야 합니다.
+
+### 작업 제출
+
+다음은 모델 목록 조회만 수행하는 위임 예시입니다.
+
+```bash
+codex cloud exec --env "<ENV_ID>" --branch main \
+  "저장소의 공식 openai-cli Skill을 읽고 python3 scripts/check-auth.py로 인증을 확인해줘. 키 값은 출력하지 말고 결과만 요약해줘. 유료 생성 요청은 실행하지 마."
+```
+
+제출하면 작업 URL이 출력됩니다. `--branch main`은 Cloud에서 사용할 Git 브랜치를
+지정하며, 생략하면 현재 로컬 브랜치를 사용합니다. 이 명령은 로컬의 미커밋 파일이나
+미푸시 커밋을 자동으로 업로드하지 않습니다. 수정한 코드로 실행하려면 필요한 변경을
+먼저 커밋·푸시하고 그 브랜치를 지정합니다.
+
+로컬 Codex에게 자연어로 명령 실행을 맡길 수도 있습니다.
+
+> 이 작업을 `codex cloud exec`로 환경 `<ENV_ID>`에 위임해줘. `main` 브랜치를 사용하고,
+> 완료 상태를 확인한 뒤 결과를 요약해줘. 키 값은 출력하지 말고 유료 생성 요청은 하지 마.
+
+### 상태 확인과 코드 변경 가져오기
+
+`<TASK_ID>`는 제출한 작업의 ID로 바꿉니다. 작업 URL 또는 `codex cloud` 화면에서
+결과 메시지를 확인하고, CLI에서는 다음과 같이 상태와 코드 변경분을 조회합니다.
+
+```bash
+codex cloud status "<TASK_ID>"
+codex cloud diff "<TASK_ID>"
+```
+
+코드 수정 작업의 diff를 검토한 뒤, 해당 저장소의 로컬 체크아웃에서 적용합니다.
+적용 전 로컬 변경 사항을 확인해 충돌을 피합니다.
+
+```bash
+codex cloud apply "<TASK_ID>"
+```
+
+모델 목록 조회처럼 코드 변경이 없는 작업은 결과 메시지만 확인하면 됩니다.
+`apply`는 작업 결과를 GitHub에 푸시하거나 환경을 게시하는 명령이 아닙니다.
+
+### 이미지와 생성 파일 받기
+
+공식 OpenAI CLI는 기본적으로 이미지를 파일로 저장하고 경로를 출력합니다.
+Cloud에 위임하면 그 파일도 Cloud 파일시스템에 저장됩니다. 명시적인 `--format json`은
+자동 파일 저장 대신 API 데이터를 반환합니다.
+
+이 저장소의 `results/`와 `outputs/`는 Git 제외 대상입니다. **`codex cloud apply`는
+Git diff를 적용할 뿐, 여기에 저장된 이미지·오디오·JSON 파일을 로컬로 자동 다운로드하지
+않습니다.** 현재 프로젝트에는 생성 파일을 로컬로 자동 전달하는 기능이 없습니다.
+파일이 필요한 위임 작업은 사용할 다운로드 수단이나 사용자가 지정한 저장소를 통한
+전달 절차를 별도로 정해야 합니다. 개인 실행 결과를 공개 Git 저장소에 커밋하지 않습니다.
+
+참고: [공식 Codex Cloud CLI 명령 정의](https://github.com/openai/codex/blob/4413deac572eb5d4cdb49295794cbe30f8622935/codex-rs/cloud-tasks/src/cli.rs),
+[공식 OpenAI CLI 이미지 저장 방식](https://github.com/openai/openai-cli/blob/fb2a8bf24693e391b0a6bac2bb6c004fa15085cb/docs/image-generation-saving.md).
+
 ## Codex Cloud에서 설치와 새 작업 시작
 
 필요 도구는 Bash, Python 3.11 이상, curl, Git입니다. 기본 Codex Cloud 이미지에서
