@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set +x
+set -euo pipefail
+toolkit_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)"
+cli="$toolkit_root/.local/bin/openai"
+if [[ ! -x "$cli" ]]; then
+  printf '%s\n' 'OpenAI CLI is not installed. Run: python3 scripts/install.py' >&2
+  exit 127
+fi
+export OPENAI_CLI_NO_AUTO_UPDATE=1
+export OPENAI_CLI_NO_UPDATE_CHECK=1
+# The official CLI reads OPENAI_API_KEY directly from the inherited environment.
+exec "$cli" "$@"

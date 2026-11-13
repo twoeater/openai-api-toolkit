@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "repository": "https://github.com/openai/openai-cli",
+  "version": "1.53.1",
+  "tag": "v1.53.1",
+  "commit": "fb2a8bf24693e391b0a6bac2bb6c004fa15085cb",
+  "platform": "linux_amd64",
+  "archive": {
+    "url": "https://github.com/openai/openai-cli/releases/download/v1.53.1/openai_1.53.1_linux_amd64.tar.gz",
+    "sha256": "98e5be97ae26467763dc72e82960ee7d9918ef4cc774e918d1be0448c9b7dd47",
+    "checksums_url": "https://github.com/openai/openai-cli/releases/download/v1.53.1/openai_1.53.1_checksums.txt"
+  },
+  "binary_sha256": "d7d4b48f84c3c338b8eacaff4d42795ab521a0da7d46c1f7da313a310e2f4eae",
+  "skill": {
+    "path": ".agents/skills/openai-cli/SKILL.md",
+    "url": "https://raw.githubusercontent.com/openai/openai-cli/fb2a8bf24693e391b0a6bac2bb6c004fa15085cb/skills/openai-cli/SKILL.md",
+    "sha256": "b57899ebac76b688dd74d8062ff13baf2f811fc3206b6cb26f65fe07309af14c",
+    "license_path": ".agents/skills/openai-cli/LICENSE",
+    "license_sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+  }
+}
